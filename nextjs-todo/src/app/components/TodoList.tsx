@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import {
   Checkbox,
   Modal,
@@ -20,17 +22,22 @@ import {
   MoonOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
-import "../styles/todoList.css";
 
-//  Reuse the same Todo type  made in TodoDetails
-type Todo = {
+/**
+ * Note:
+ * - Global CSS (e.g., todoList.css) should be imported in app/layout.tsx (or app/globals.css)
+ *   as Next.js only allows importing global CSS in layout or pages entry.
+ * - Place this file at: components/TodoList.tsx
+ */
+
+// Reuse Todo type
+export type Todo = {
   id: number;
   userId: number;
   title: string;
   completed: boolean;
 };
 
-// Props for this component
 type TodoListProps = {
   toggleTheme: () => void;
   currentTheme: "light" | "dark";
@@ -42,11 +49,14 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "incomplete">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "completed" | "incomplete"
+  >("all");
 
   const [isAddModalVisible, setIsAddModalVisible] = useState<boolean>(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
-  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] = useState<boolean>(false);
+  const [isDeleteConfirmVisible, setIsDeleteConfirmVisible] =
+    useState<boolean>(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
 
@@ -77,7 +87,9 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
         let errorMessage = "Failed to load todos.";
         if (axios.isAxiosError(err)) {
           if (err.response) {
-            errorMessage = `Error: ${err.response.status} - ${err.response.statusText || "Server Error"}`;
+            errorMessage = `Error: ${err.response.status} - ${
+              err.response.statusText || "Server Error"
+            }`;
           } else if (err.request) {
             errorMessage = "Network error. No response received from server.";
           } else {
@@ -92,6 +104,7 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
           description: errorMessage,
           placement: "topRight",
         });
+        setError(new Error(errorMessage));
       } finally {
         setLoading(false);
       }
@@ -108,7 +121,6 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
         userId: 1,
       });
 
-      // Add fake id since JSONPlaceholder returns "201" without unique ID
       const newTodo: Todo = {
         ...response.data,
         id: Math.max(...todos.map((t) => t.id), 200) + 1,
@@ -292,7 +304,7 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
 
   if (loading) {
     return (
-      <div className="todo-list-container" role="status" aria-live="polite">
+      <div className="todo-list-container" role="status" aria-live="polite">  
         <div className="todo-list-wrapper">
           <div className="loading-state-container">
             <div className="loading-spinner"></div>
@@ -413,7 +425,7 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
                     Delete
                   </Button>
                   <Link
-                    to={`/todos/${todo.id}`}
+                    href={`/todos/${todo.id}`}
                     className="action-button view-button"
                     aria-label={`View details for todo: ${todo.title}`}
                   >
@@ -463,33 +475,23 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
       >
         <Form
           form={addForm}
-          onFinish={handleAddTodo}
           layout="vertical"
-          initialValues={{ completed: false }}
+          onFinish={handleAddTodo}
+          aria-label="Add Todo Form"
         >
           <Form.Item
             name="title"
-            label="Todo Title"
-            rules={[{ required: true, message: "Please input the todo title!" }]}
+            label="Title"
+            rules={[
+              { required: true, message: "Please enter a todo title" },
+              { min: 3, message: "Title must be at least 3 characters long" },
+            ]}
           >
-            <Input placeholder="e.g., Plan social media content" />
+            <Input placeholder="Enter todo title" aria-label="Todo title" />
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              className="add-todo-modal-button"
-            >
+            <Button type="primary" htmlType="submit" block>
               Add Todo
-            </Button>
-            <Button
-              onClick={() => {
-                setIsAddModalVisible(false);
-                addForm.resetFields();
-              }}
-              style={{ marginLeft: 8 }}
-            >
-              Cancel
             </Button>
           </Form.Item>
         </Form>
@@ -506,36 +508,38 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
         }}
         footer={null}
       >
-        <Form form={editForm} onFinish={handleUpdateTodo} layout="vertical">
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdateTodo}
+          aria-label="Edit Todo Form"
+        >
           <Form.Item
             name="title"
-            label="Todo Title"
-            rules={[{ required: true, message: "Please input the todo title!" }]}
+            label="Title"
+            rules={[
+              { required: true, message: "Please enter a todo title" },
+              { min: 3, message: "Title must be at least 3 characters long" },
+            ]}
           >
-            <Input placeholder="e.g., Plan social media content" />
+            <Input placeholder="Edit todo title" aria-label="Edit todo title" />
           </Form.Item>
-          <Form.Item name="completed" valuePropName="checked">
-            <Checkbox>Completed</Checkbox>
+          <Form.Item
+            name="completed"
+            valuePropName="checked"
+            style={{ marginBottom: 0 }}
+          >
+            <Checkbox aria-label="Mark as completed">Completed</Checkbox>
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+          <Form.Item style={{ marginTop: "1rem" }}>
+            <Button type="primary" htmlType="submit" block>
               Update Todo
-            </Button>
-            <Button
-              onClick={() => {
-                setIsEditModalVisible(false);
-                setEditingTodo(null);
-                editForm.resetFields();
-              }}
-              style={{ marginLeft: 8 }}
-            >
-              Cancel
             </Button>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Delete Modal */}
+      {/* Delete Confirmation Modal */}
       <Modal
         title="Confirm Delete"
         open={isDeleteConfirmVisible}
@@ -545,36 +549,31 @@ const TodoList: React.FC<TodoListProps> = ({ toggleTheme, currentTheme }) => {
           setDeletingTodoId(null);
         }}
         okText="Delete"
-        cancelText="Cancel"
         okButtonProps={{ danger: true }}
+        cancelText="Cancel"
+        aria-label="Confirm delete modal"
       >
-        <p>Are you sure you want to delete this todo? This action cannot be undone.</p>
+        <p>Are you sure you want to delete this todo?</p>
       </Modal>
 
-      {/*  Success Modal */}
+      {/* Success Modal */}
       <Modal
         open={showSuccessModal}
-        title={successModalTitle}
         onCancel={() => setShowSuccessModal(false)}
         footer={[
-          <Button
-            key="ok"
-            type="primary"
-            onClick={() => setShowSuccessModal(false)}
-          >
-            OK
+          <Button key="close" type="primary" onClick={() => setShowSuccessModal(false)}>
+            Close
           </Button>,
         ]}
-        centered
+        aria-label="Success modal"
       >
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <CheckCircleOutlined style={{ fontSize: "48px", color: "#28a745" }} />
+        <div className="success-modal-content">
+          <CheckCircleOutlined
+            style={{ fontSize: "48px", color: "#52c41a", marginBottom: "16px" }}
+          />
+          <h2>{successModalTitle}</h2>
+          <p>{successModalMessage}</p>
         </div>
-        <p
-          style={{ textAlign: "center", fontSize: "1.1em", color: "#333333" }}
-        >
-          {successModalMessage}
-        </p>
       </Modal>
     </main>
   );

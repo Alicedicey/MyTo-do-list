@@ -1,8 +1,6 @@
-import React, { FC } from 'react';
-import { Link } from 'react-router-dom';
-import '../styles/todoList.css';
+import Link from "next/link";
 
-const NotFound: FC = () => {
+export default function NotFound() {
   return (
     <main
       className="todo-list-container not-found-container"
@@ -11,11 +9,9 @@ const NotFound: FC = () => {
     >
       <h1>404</h1>
       <p>Page Not Found</p>
-      <Link to="/" className="back-button">
+      <Link href="/" className="back-button">
         Go to Home
       </Link>
     </main>
   );
-};
-
-export default NotFound;
+}
